@@ -1,0 +1,189 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: mattermost
+  annotations:
+    openshift.io/display-name: "Mattermost Team (Opensource)"
+    description: "Template to provision a Mattermost Team instance."
+    iconClass: "icon-bubbles"
+    tags: "instant-app,mattermost,slack"
+  creationTimestamp: null
+objects:
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: "mattermost-config"
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: "1Gi"
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: "mattermost-logs"
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: "1Gi"
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    creationTimestamp: null
+    generation: 1
+    labels:
+      service: mattermost
+    name: mattermost
+  spec:
+    replicas: 1
+    selector:
+      service: mattermost
+    strategy:
+      resources:
+        requests:
+          cpu: 20m
+          memory: 1Gi
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Recreate
+      triggers:
+        - type: ConfigChange
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          service: mattermost
+          name: "mattermost"
+      spec:
+        containers:
+        - name: mattermost
+          image: registry.centos.org/mattermost/mattermost:4.2
+          ports:
+          - containerPort: 8065
+            protocol: TCP
+          env:
+          - name: MM_DB_HOST
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm-db-host
+          - name: MM_DB_PORT
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm-db-port
+          - name: MM_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm-db-user
+          - name: MM_DB_PASS
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm-db-pass
+          - name: MM_DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm-db-name
+          - name: MM_USE_S3
+            value: "true"
+          - name: MM_S3_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm-s3-key-id
+          - name: MM_S3_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm-s3-key
+          - name: MM_S3_BUCKET
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm-s3-bucket
+          volumeMounts:
+            - name: mattermost-config
+              mountPath: "/opt/mattermost/config"
+              readOnly: false
+            - name: mattermost-logs
+              mountPath: "/opt/mattermost/logs"
+              readOnly: false
+        volumes:
+          - name: mattermost-config
+            persistentVolumeClaim:
+              claimName: "mattermost-config"
+          - name: mattermost-logs
+            persistentVolumeClaim:
+              claimName: "mattermost-logs"
+        terminationMessagePath: "/dev/termination-log"
+        resources: {}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8065
+            scheme: HTTP
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8065
+            scheme: HTTP
+          initialDelaySeconds: 20
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst
+- kind: Service
+  apiVersion: v1
+  metadata:
+    creationTimestamp: null
+    labels: 
+      service: mattermost
+    name: "mattermost"
+  spec:
+    ports:
+    - name: mattermost
+      port: 8065
+      targetPort: 8065
+      protocol: TCP
+    selector:
+      service: "mattermost"
+    sessionAffinity: None
+    type: ClusterIP
+- kind: Route
+  apiVersion: v1
+  metadata:
+    creationTimestamp: null
+    labels: 
+      service: mattermost
+    name: "mattermost"
+  spec:
+    host: ''
+    port:
+      targetPort: 8065
+    to:
+      kind: Service
+      name: "mattermost"
+      weight: 100
+    wildcardPolicy: None
+  status: {}
+parameters:
+- name: IMAGE_TAG
+  value: latest
