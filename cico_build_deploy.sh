@@ -6,44 +6,27 @@ set -x
 # Exit on error
 set -e
 
-# Export needed vars
-for var in GIT_COMMIT DEVSHIFT_USERNAME DEVSHIFT_PASSWORD DEVSHIFT_TAG_LEN; do
-  export $(grep ${var} jenkins-env | xargs)
-done
 export BUILD_TIMESTAMP=`date -u +%Y-%m-%dT%H:%M:%S`+00:00
 
-# We need to disable selinux for now, XXX
-/usr/sbin/setenforce 0
-
-# Get all the deps in
-yum -y install docker
-yum clean all
-service docker start
-
-# Build the app
-
+# Check the existence of image on registry.centos.org
 IMAGE="mattermost-team"
-REGISTRY="push.registry.devshift.net"
-REPOSITORY="${REGISTRY}/openshiftio"
+REGISTRY="https://registry.centos.org"
+REPOSITORY="mattermost"
+TEMPLATE="openshift/mattermost.app.yaml"
 
-docker build -t ${IMAGE} -f Dockerfile .
+#Find tag used by deployment template
+echo -e "Scanning OpenShift Deployment Template for Image tag"
+TAG=$(cat $TEMPLATE | grep -o -e "registry.*" | awk '{split($0,array,"/")} END{print array[3]}' | awk '{split($0,array,":")} END{print array[2]}')
 
-TAG=$(echo $GIT_COMMIT | cut -c1-${DEVSHIFT_TAG_LEN})
+#Check if image is in the registry
+echo -e "Checking if image exists on the registry"
+TAGLIST=$(curl -X GET $REGISTRY/v2/$REPOSITORY/$IMAGE/tags/list)
+echo $TAGLIST | grep -w $TAG
 
-if [ -n "${DEVSHIFT_USERNAME}" -a -n "${DEVSHIFT_PASSWORD}" ]; then
-  docker login -u ${DEVSHIFT_USERNAME} -p ${DEVSHIFT_PASSWORD} ${REGISTRY}
-else
-  echo "Could not login, missing credentials for the registry"
-fi
-
-docker tag ${IMAGE} ${REPOSITORY}/${IMAGE}:$TAG && \
-docker push ${REPOSITORY}/${IMAGE}:$TAG && \
-docker tag ${IMAGE} ${REPOSITORY}/${IMAGE}:latest && \
-docker push ${REPOSITORY}/${IMAGE}:latest
 if [ $? -eq 0 ]; then
-  echo 'CICO: image pushed, ready to update deployed app'
+  echo 'CICO: Image existence check successful. Ready to deploy updated app'
   exit 0
 else
-  echo 'CICO: Image push to registry failed'
+  echo 'CICO: Image existence check failed. Exiting'
   exit 2
 fi
