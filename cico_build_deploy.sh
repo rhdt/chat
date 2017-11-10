@@ -19,7 +19,7 @@ echo -e "Scanning OpenShift Deployment Template for Image tag"
 TAG=$(cat $TEMPLATE | grep -A 1 "name: IMAGE_TAG" | grep "value:" |  awk '{split($0,array,":")} END{print array[2]}')
 
 #Check if image is in the registry
-echo -e "Checking if image exists on the registry"
+echo -e "Checking if image exists in the registry"
 TAGLIST=$(curl -X GET $REGISTRY/v2/$REPOSITORY/$IMAGE/tags/list)
 echo $TAGLIST | grep -w $TAG
 
