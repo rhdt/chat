@@ -64,7 +64,7 @@ objects:
       spec:
         containers:
         - name: mattermost
-          image: registry.centos.org/mattermost/mattermost-team:4.2
+          image: registry.centos.org/mattermost/mattermost-team:${IMAGE_TAG}
           ports:
           - containerPort: 8065
             protocol: TCP
@@ -154,4 +154,4 @@ objects:
   status: {}
 parameters:
 - name: IMAGE_TAG
-  value: latest
+  value: 4.2
