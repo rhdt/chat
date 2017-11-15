@@ -16,7 +16,7 @@ TEMPLATE="openshift/mattermost.app.yaml"
 
 #Find tag used by deployment template
 echo -e "Scanning OpenShift Deployment Template for Image tag"
-TAG=$(cat $TEMPLATE | grep -A 1 "name: IMAGE_TAG" | grep "value:" |  awk '{split($0,array,":")} END{print array[2]}')
+TAG=$(cat $TEMPLATE | grep -A 1 "name: IMAGE_TAG_VERSION" | grep "value:" |  awk '{split($0,array,":")} END{print array[2]}')
 
 #Check if image is in the registry
 echo -e "Checking if image exists in the registry"
