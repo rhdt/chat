@@ -187,3 +187,4 @@ objects:
 parameters:
 - name: IMAGE_TAG_VERSION
   value: "4.2"
+- name: IMAGE_TAG
