@@ -186,5 +186,5 @@ objects:
   status: {}
 parameters:
 - name: IMAGE_TAG_VERSION
-  value: "4.3"
+  value: "4.4"
 - name: IMAGE_TAG
