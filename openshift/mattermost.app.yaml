@@ -111,6 +111,18 @@ objects:
               secretKeyRef:
                 name: "mattermost"
                 key: mm.s3.bucket
+          - name: ZABBIX_SERVER
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm.zabbix.server
+          - name: ZABBIX_HOSTNAME
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm.zabbix.hostname
+          - name: PCP_METRICS
+            value: "cgroup.memory.usage network.interface.in.bytes network.interface.out.bytes cgroup.cpuacct.usage cgroup.memory.stat.rss"
           volumeMounts:
             - name: mattermost-config
               mountPath: "/opt/mattermost/config"
@@ -186,5 +198,5 @@ objects:
   status: {}
 parameters:
 - name: IMAGE_TAG_VERSION
-  value: "4.7.1"
+  value: "4.7wPCP"
 - name: IMAGE_TAG
