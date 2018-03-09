@@ -63,6 +63,22 @@ objects:
           name: "mattermost"
       spec:
         containers:
+        - name: mm-zabbix-relay
+          image: registry.devshift.net/perf/mm-zabbix-relay:latest
+          env:
+          - name: ZABBIX_SERVER
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm.zabbix.server
+          - name: ZABBIX_HOSTNAME
+            valueFrom:
+              secretKeyRef:
+                name: "mattermost"
+                key: mm.zabbix.hostname
+          - name: PCP_METRICS
+            value: cgroup.memory.usage network.interface.in.bytes network.interface.out.bytes cgroup.cpuacct.usage cgroup.memory.stat.rss
+          imagePullPolicy: Always
         - name: mattermost
           image: registry.centos.org/mattermost/mattermost-team:${IMAGE_TAG_VERSION}
           ports:
@@ -111,18 +127,6 @@ objects:
               secretKeyRef:
                 name: "mattermost"
                 key: mm.s3.bucket
-          - name: ZABBIX_SERVER
-            valueFrom:
-              secretKeyRef:
-                name: "mattermost"
-                key: mm.zabbix.server
-          - name: ZABBIX_HOSTNAME
-            valueFrom:
-              secretKeyRef:
-                name: "mattermost"
-                key: mm.zabbix.hostname
-          - name: PCP_METRICS
-            value: "cgroup.memory.usage network.interface.in.bytes network.interface.out.bytes cgroup.cpuacct.usage cgroup.memory.stat.rss"
           volumeMounts:
             - name: mattermost-config
               mountPath: "/opt/mattermost/config"
