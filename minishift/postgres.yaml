@@ -41,7 +41,7 @@ objects:
         value: userdb
       - name: POSTGRESQL_ADMIN_PASSWORD
         value: password
-      image: syamgk/postgres96
+      image: registry.centos.org/centos/postgresql-95-centos7:latest
       imagePullPolicy: Always
       name: postgres
       ports:
