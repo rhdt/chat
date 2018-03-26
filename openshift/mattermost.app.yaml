@@ -202,5 +202,5 @@ objects:
   status: {}
 parameters:
 - name: IMAGE_TAG_VERSION
-  value: "4.7wPCP"
+  value: "4.8-PCP"
 - name: IMAGE_TAG
