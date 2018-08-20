@@ -154,4 +154,4 @@ objects:
   status: {}
 parameters:
 - name: IMAGE_TAG
-  value: "5.1-PCP"
+  value: "5.2-PCP"
